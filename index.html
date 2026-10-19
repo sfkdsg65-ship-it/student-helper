@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0F5B4A">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;font:14px system-ui,sans-serif}
@@ -185,7 +185,29 @@ textarea.in{min-height:120px;resize:vertical}
 .sw-in{box-shadow:inset 0 0 0 3px var(--surface)}
 .hint{font-size:13px;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:40;max-width:90vw;font-size:14px}
+
+/* ---------- заставка при запуске ---------- */
+#splash{position:fixed;inset:0;z-index:100;background:#0F5B4A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;animation:spOut .45s ease 1.75s forwards}
+#splash svg{width:min(46vw,200px);height:auto;overflow:visible}
+#splash .card{transform-origin:256px 256px;animation:spCard .6s cubic-bezier(.2,.9,.3,1.2) both}
+#splash .band{transform-box:fill-box;transform-origin:50% 0;animation:spBand .45s ease .35s both}
+#splash .ln{transform-box:fill-box;transform-origin:0 50%;animation:spLn .4s ease both}
+#splash .l1{animation-delay:.55s}#splash .l2{animation-delay:.65s}#splash .l3{animation-delay:.9s}
+#splash .dot{transform-box:fill-box;transform-origin:center;animation:spPop .35s cubic-bezier(.2,.9,.3,1.4) .8s both}
+#splash .tick{stroke-dasharray:60;stroke-dashoffset:60;animation:spTick .35s ease 1.0s forwards}
+#splash h1{margin:0;font:600 22px/1.2 var(--f-display);letter-spacing:-.02em;color:#F1F4EF;text-align:center;animation:spTxt .5s ease .9s both}
+#splash h1 b{background:linear-gradient(transparent 60%,#F4DA55 60% 92%,transparent 92%);font-weight:inherit;color:#fff;padding:0 .1em}
+@keyframes spCard{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes spBand{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes spLn{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
+@keyframes spPop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes spTick{to{stroke-dashoffset:0}}
+@keyframes spTxt{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spOut{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){#splash{animation-delay:.3s;animation-duration:.2s}#splash *{animation:none!important}#splash .tick{stroke-dashoffset:0}}
 </style>
+
+<div id="splash" aria-hidden="true"><svg viewBox="0 0 512 512"><g class="card"><rect x="118" y="136" width="280" height="276" rx="40" fill="#0B4034"/><rect x="116" y="120" width="280" height="272" rx="40" fill="#F1F4EF"/><path class="band" d="M156 120h200a40 40 0 0 1 40 40v36H116v-36a40 40 0 0 1 40-40z" fill="#F4DA55"/><rect x="186" y="92" width="28" height="60" rx="14" fill="#0B3F34"/><rect x="298" y="92" width="28" height="60" rx="14" fill="#0B3F34"/><rect class="ln l1" x="156" y="232" width="200" height="16" rx="8" fill="#C3CFC6"/><rect class="ln l2" x="156" y="272" width="144" height="16" rx="8" fill="#C3CFC6"/><circle class="dot" cx="186" cy="342" r="30" fill="#0F5B4A"/><path class="tick" d="M173 343l10 10 18-21" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><rect class="ln l3" x="236" y="334" width="120" height="16" rx="8" fill="#C3CFC6"/></g></svg><h1>Помощник<br>по <b>учёбе</b></h1></div>
 
 <div id="app">
   <main id="view"></main>
@@ -711,6 +733,7 @@ initCloud();
 </script>
 
 <script>
+(function(){var e=document.getElementById('splash');if(!e)return;var rm=function(){if(e.parentNode)e.remove()};setTimeout(rm,2300);e.addEventListener('click',rm)})();
 if('serviceWorker' in navigator){addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
 </script>
 </body>
