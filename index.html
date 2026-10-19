@@ -49,9 +49,9 @@ h1,h2,h3,p{margin:0}
 .cap{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
 
 /* header */
-.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-top:8px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:8px}
 .title{font:600 clamp(26px,8vw,34px)/1.05 var(--f-display);letter-spacing:-.03em;text-wrap:balance;min-width:0}
-.mark{background:linear-gradient(transparent 58%,var(--mark) 58% 92%,transparent 92%);padding:0 .08em;color:var(--fg)}
+.mark{text-decoration:underline;text-decoration-color:var(--mark);text-decoration-thickness:5px;text-underline-offset:7px;text-decoration-skip-ink:none}
 .sub{color:var(--muted);margin-top:6px}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 16px;border-radius:12px;font-weight:600;background:var(--accent);color:var(--on-accent)}
 .btn.ghost{background:var(--surface);color:var(--fg);border:1px solid var(--line)}
@@ -186,6 +186,11 @@ textarea.in{min-height:120px;resize:vertical}
 .hint{font-size:13px;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-weight:600;z-index:40;max-width:90vw;font-size:14px}
 
+.item.wrap{flex-wrap:wrap}
+.grow-row{flex-basis:100%;padding-left:78px;margin-top:-4px}
+.item.win{background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--muted) 9%,transparent) 8px 16px)}
+.gchip.sm{min-width:30px;height:30px;font-size:14px;border-radius:8px}
+.datehead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;width:100%;text-align:left;padding:2px 0}
 /* ---------- заставка при запуске ---------- */
 #splash{position:fixed;inset:0;z-index:100;background:#0F5B4A;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;animation:spOut .45s ease 1.75s forwards}
 #splash svg{width:min(46vw,200px);height:auto;overflow:visible}
@@ -196,7 +201,7 @@ textarea.in{min-height:120px;resize:vertical}
 #splash .dot{transform-box:fill-box;transform-origin:center;animation:spPop .35s cubic-bezier(.2,.9,.3,1.4) .8s both}
 #splash .tick{stroke-dasharray:60;stroke-dashoffset:60;animation:spTick .35s ease 1.0s forwards}
 #splash h1{margin:0;font:600 22px/1.2 var(--f-display);letter-spacing:-.02em;color:#F1F4EF;text-align:center;animation:spTxt .5s ease .9s both}
-#splash h1 b{background:linear-gradient(transparent 60%,#F4DA55 60% 92%,transparent 92%);font-weight:inherit;color:#fff;padding:0 .1em}
+#splash h1 b{text-decoration:underline;text-decoration-color:#F4DA55;text-decoration-thickness:4px;text-underline-offset:6px;text-decoration-skip-ink:none;font-weight:inherit;color:#fff}
 @keyframes spCard{from{transform:scale(.6) rotate(-6deg);opacity:0}to{transform:none;opacity:1}}
 @keyframes spBand{from{transform:scaleY(0)}to{transform:scaleY(1)}}
 @keyframes spLn{from{transform:scaleX(0);opacity:0}to{transform:scaleX(1);opacity:1}}
@@ -220,11 +225,11 @@ textarea.in{min-height:120px;resize:vertical}
 (function(){
 'use strict';
 var H_PAIR=2;
-var COLORS=['#3B82C4','#E07A3F','#2F9E77','#C2518F','#8A6FD1','#C9A227','#D95D5D','#4C9AA6'];
+var COLORS=['#3B82C4','#E07A3F','#2F9E77','#C2518F','#8A6FD1','#C9A227','#D95D5D','#4C9AA6','#7A8B3C','#B5651D'];
 var WD=['понедельник','вторник','среда','четверг','пятница','суббота','воскресенье'];
 var WDS=['пн','вт','ср','чт','пт','сб','вс'];
 var MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-var KINDS=['Лекция','Практика','Лаб','Семинар'];
+var KINDS=['Лекция','Практика','Лабораторная','Зачёт'];
 
 var $=function(s,r){return (r||document).querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
@@ -244,6 +249,8 @@ var cap=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
 function relDay(s){var d=diffDays(s,today());if(d===0)return 'Сегодня';if(d===1)return 'Завтра';if(d===2)return 'Послезавтра';if(d===-1)return 'Вчера';return cap(WD[wdOf(s)])}
 
 /* ---------- state ---------- */
+var justSeeded=false;
+var SEED=['Инженерная графика','ОКЖД','Прикладная математика','Информатика','Материаловедение','Английский язык','ТБ','Физра','История','ОФГ'];
 function demo(){
   var t=today(),y=function(n){return addDays(t,n)};
   var s=[
@@ -271,12 +278,12 @@ function demo(){
     settings:{target:4.5}};
 }
 function empty(){return {v:1,demo:false,updated:0,subjects:[],lessons:[],template:[],hw:[],grades:[],focus:[],settings:{target:4.5}}}
-function norm(s){if(!s||s.demo)return empty();var e=empty();for(var k in e){if(s[k]===undefined)s[k]=e[k]}if(!s.settings||typeof s.settings.target!=='number')s.settings={target:4.5};return s}
+function norm(s){if(!s||s.demo)s=empty();var e=empty();for(var k in e){if(s[k]===undefined)s[k]=e[k]}if(!s.settings||typeof s.settings.target!=='number')s.settings={target:4.5};['lessons','template'].forEach(function(k){s[k].forEach(function(l){if(l.kind==='Лаб')l.kind='Лабораторная';else if(l.kind==='Семинар')l.kind='Практика'})});if(!s.seeded){var have={};s.subjects.forEach(function(x){have[x.name.toLowerCase()]=1});SEED.forEach(function(n,i){if(!have[n.toLowerCase()])s.subjects.push({id:'seed-'+(i+1),name:n,teacher:'',total:0,before:0,color:COLORS[s.subjects.length%COLORS.length]})});s.seeded=true;justSeeded=true}return s}
 var LS='study-helper-v1';
 function localLoad(){try{var r=localStorage.getItem(LS);if(r)return norm(JSON.parse(r))}catch(e){}return null}
 function localSave(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}}
-var state=localLoad()||empty();
-var ui={tab:'day',date:addDays(today(),1),hwTab:'open',sheetDel:null};
+var state=norm(localLoad()||empty());
+var ui={tab:'day',mode:'day',date:addDays(today(),1),hwTab:'open',sheetDel:null};
 try{var tb=localStorage.getItem('study-helper-tab');if(tb&&/^(day|hw|hours|grades|focus)$/.test(tb))ui.tab=tb}catch(e){}
 
 /* ---------- cloud sync (db) ---------- */
@@ -318,11 +325,22 @@ async function initCloud(){
 var sub=function(id){return state.subjects.find(function(s){return s.id===id})};
 var subName=function(id){var s=sub(id);return s?s.name:'Без предмета'};
 var subDot=function(id){var s=sub(id);return '<span class="dot" style="background:'+(s?s.color:'#999')+'"></span>'};
-function lessonsOn(d){return state.lessons.filter(function(l){return l.date===d}).sort(function(a,b){return (a.start||'99').localeCompare(b.start||'99')})}
+function lessonKey(l){return (l.num===''||l.num==null)?null:+l.num}
+function sortLessons(a,b){
+  var na=lessonKey(a),nb=lessonKey(b);
+  if(na!=null&&nb!=null&&na!==nb)return na-nb;
+  if(a.start&&b.start&&a.start!==b.start)return a.start<b.start?-1:1;
+  if((na!=null)!==(nb!=null))return na!=null?-1:1;
+  return 0;
+}
+function lessonsOn(d){return state.lessons.filter(function(l){return l.date===d}).sort(sortLessons)}
+function isWin(l){return l.kind==='Окно'}
+function pairsOf(ls){return ls.filter(function(l){return !isWin(l)}).length}
+function hoursOf(ls){return ls.filter(function(l){return !isWin(l)&&l.kind!=='Зачёт'}).length*H_PAIR}
 function stats(s){
   var t=today(),done=0,planned=0,skipped=0;
   state.lessons.forEach(function(l){
-    if(l.sid!==s.id)return;
+    if(l.sid!==s.id||l.kind==='Зачёт')return;
     if(l.status==='skipped')skipped++;
     var held=l.status==='done'||l.date<t||(l.date===t&&l.status==='skipped');
     if(held)done++;else planned++;
@@ -366,7 +384,7 @@ function banner(){
 function weekStrip(){
   var start=addDays(ui.date,-wdOf(ui.date)),t=today(),h='';
   for(var i=0;i<7;i++){
-    var d=addDays(start,i),has=lessonsOn(d).length>0;
+    var d=addDays(start,i),has=lessonsOn(d).length>0||state.grades.some(function(g){return g.date===d});
     h+='<button class="wd'+(d===ui.date?' on':'')+(d===t?' today':'')+(has?' has':'')+'" data-act="pick" data-d="'+d+'"><small>'+WDS[i]+'</small><b>'+pd(d).getDate()+'</b><i></i></button>';
   }
   return '<div class="sec"><div class="weeknav"><button data-act="week" data-n="-7" aria-label="Прошлая неделя">‹</button><span class="cap">'+fmtShort(start)+' – '+fmtShort(addDays(start,6))+'</span><button data-act="week" data-n="7" aria-label="Следующая неделя">›</button></div><div class="week">'+h+'</div></div>';
@@ -380,37 +398,73 @@ function hwRow(h,showDue){
   return '<div class="item'+(h.done?' done':'')+'"><button class="chk'+(h.done?' on':'')+'" data-act="hw-toggle" data-id="'+h.id+'" aria-label="Отметить выполненным"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>'+
    '<button class="grow" style="text-align:left" data-act="edit-hw" data-id="'+h.id+'"><div class="name">'+esc(h.text)+'</div><div class="meta"><span>'+subDot(h.sid)+esc(s?s.name:'Без предмета')+'</span>'+due+'</div></button></div>';
 }
+function gChip(g,sm){return '<button class="gchip'+(sm?' sm':'')+' g'+g.val+'" data-act="edit-grade" data-id="'+g.id+'" aria-label="Оценка '+g.val+', изменить">'+g.val+(g.w>1?'<sup>×'+g.w+'</sup>':'')+'</button>'}
+function timeCell(l){
+  var top=l.start||(l.num?l.num+' пара':'—'),low=(l.start&&l.num)?l.num+' пара':'';
+  return '<div class="t">'+esc(top)+(low?'<small>'+low+'</small>':'')+'</div>';
+}
+function lessonRow(l,d,t,shown){
+  var btn='flex-wrap:nowrap;align-items:flex-start;gap:12px;text-align:left';
+  if(isWin(l))return '<div class="item win"><button class="grow row" style="'+btn+'" data-act="edit-window" data-id="'+l.id+'">'+timeCell(l)+'<div class="grow"><div class="name muted">Окно</div><div class="meta">свободное время</div></div></button></div>';
+  var s=sub(l.sid),past=d<=t,st='';
+  if(l.status==='done')st='<span class="tag good">была</span>';else if(l.status==='skipped')st='<span class="tag bad">пропуск</span>';else if(d<t)st='<span class="tag">прошла</span>';
+  var gs=state.grades.filter(function(g){return g.sid===l.sid&&g.date===d&&!shown[g.id]});
+  gs.forEach(function(g){shown[g.id]=1});
+  var meta=[];if(l.kind)meta.push('<span>'+esc(l.kind)+'</span>');if(l.room)meta.push('<span>ауд. '+esc(l.room)+'</span>');if(st)meta.push(st);
+  return '<div class="item wrap"><button class="grow row" style="'+btn+'" data-act="edit-lesson" data-id="'+l.id+'">'+timeCell(l)+'<div class="grow"><div class="name">'+subDot(l.sid)+esc(s?s.name:'Без предмета')+'</div><div class="meta">'+meta.join('')+'</div></div></button>'+
+    (past&&l.status==='planned'?'<div class="row" style="flex:none;flex-direction:column;gap:4px"><button class="btn sm" data-act="ls" data-st="done" data-id="'+l.id+'">Была</button><button class="btn sm ghost" data-act="ls" data-st="skipped" data-id="'+l.id+'">Пропуск</button></div>':'')+
+    ((gs.length||past)?'<div class="grow-row row" style="gap:6px">'+gs.map(function(g){return gChip(g,true)}).join('')+(past?'<button class="gchip sm" style="padding:0 10px" data-act="add-grade" data-sid="'+l.sid+'" data-date="'+d+'">+ оценка</button>':'')+'</div>':'')+'</div>';
+}
+function restGrades(d,shown){
+  var rest=state.grades.filter(function(g){return g.date===d&&!shown[g.id]});
+  if(!rest.length)return '';
+  return '<div class="card list">'+rest.map(function(g){return '<div class="item" style="align-items:center"><div class="grow name">'+subDot(g.sid)+esc(subName(g.sid))+(g.note?'<div class="meta">'+esc(g.note)+'</div>':'')+'</div>'+gChip(g,false)+'</div>'}).join('')+'</div>';
+}
+function modeSeg(){return '<div class="seg"><button class="'+(ui.mode==='day'?'on':'')+'" data-act="mode" data-v="day">День</button><button class="'+(ui.mode==='hist'?'on':'')+'" data-act="mode" data-v="hist">История</button></div>'}
+function vHist(){
+  var t=today(),dates={};
+  state.lessons.forEach(function(l){if(l.date<=t)dates[l.date]=1});
+  state.grades.forEach(function(g){if(g.date<=t)dates[g.date]=1});
+  var days=Object.keys(dates).sort().reverse().slice(0,60);
+  var h='<div class="top"><div><h1 class="title">История</h1><p class="sub">Какие пары были и какие оценки</p></div></div>'+banner()+modeSeg();
+  if(!days.length)return h+'<div class="card"><div class="empty">Прошедших дней пока нет. Пары хранятся по датам и сами не удаляются.</div></div>';
+  days.forEach(function(d){
+    var ls=lessonsOn(d),shown={},np=pairsOf(ls);
+    h+='<section class="sec"><button class="datehead" data-act="goto" data-d="'+d+'"><span class="cap">'+fmtLong(d)+'</span><span class="small muted">'+(np?np+' '+plural(np,['пара','пары','пар']):'')+'</span></button>'+
+      (ls.length?'<div class="card list">'+ls.map(function(l){return lessonRow(l,d,t,shown)}).join('')+'</div>':'')+restGrades(d,shown)+'</section>';
+  });
+  return h;
+}
 function vDay(){
-  var d=ui.date,t=today(),ls=lessonsOn(d);
+  if(ui.mode==='hist')return vHist();
+  var d=ui.date,t=today(),ls=lessonsOn(d),shown={};
   var hws=state.hw.filter(function(h){return h.due===d});
   var over=(d===t||d===addDays(t,1))?state.hw.filter(function(h){return !h.done&&h.due<t}):[];
   var open=hws.filter(function(h){return !h.done}).length;
+  var np=pairsOf(ls),nw=ls.length-np;
   var h='';
   h+='<div class="top"><div><h1 class="title"><span class="mark">'+relDay(d)+'</span></h1><p class="sub">'+fmtLong(d)+'</p></div></div>';
   h+=banner();
+  h+=modeSeg();
   h+=weekStrip();
   var chips=[];
-  chips.push('<span class="tag">'+ls.length+' '+plural(ls.length,['пара','пары','пар'])+' · '+ls.length*H_PAIR+' ч</span>');
+  chips.push('<span class="tag">'+np+' '+plural(np,['пара','пары','пар'])+' · '+hoursOf(ls)+' ч</span>');
+  if(nw)chips.push('<span class="tag">'+nw+' '+plural(nw,['окно','окна','окон'])+'</span>');
   chips.push('<span class="tag '+(open?'mk':'')+'">'+open+' '+plural(open,['задание','задания','заданий'])+(over.length?' + '+over.length+' долг':'')+'</span>');
   h+='<div class="row">'+chips.join('')+'</div>';
   if(new Date().getHours()>=17&&d===addDays(t,1)&&(open+over.length)>0){
     h+='<div class="banner"><div><b>Вечер.</b> На завтра осталось '+(open+over.length)+' '+plural(open+over.length,['дело','дела','дел'])+'. Проверь сумку и тетради.</div></div>';
   }
-  /* lessons */
   h+='<section class="sec"><div class="head"><h3 class="cap">Пары</h3></div>';
   if(!ls.length){
     var tpl=state.template.filter(function(x){return x.wd===wdOf(d)}).length;
     h+='<div class="card"><div class="empty">На этот день пар нет.'+(tpl?'<div style="margin-top:12px"><button class="btn sm" data-act="fill-tpl">Заполнить из шаблона недели ('+tpl+')</button></div>':'')+'</div></div>';
   }else{
-    h+='<div class="card list">'+ls.map(function(l){
-      var s=sub(l.sid),past=d<=t,st='';
-      if(l.status==='done')st='<span class="tag good">была</span>';else if(l.status==='skipped')st='<span class="tag bad">пропуск</span>';else if(d<t)st='<span class="tag">прошла</span>';
-      return '<div class="item"><button class="grow row" style="flex-wrap:nowrap;align-items:flex-start;gap:12px;text-align:left" data-act="edit-lesson" data-id="'+l.id+'"><div class="t">'+esc(l.start||'—')+'<small>'+(l.kind?esc(l.kind):'')+'</small></div><div class="grow"><div class="name">'+subDot(l.sid)+esc(s?s.name:'Без предмета')+'</div><div class="meta">'+(l.room?'<span>ауд. '+esc(l.room)+'</span>':'')+st+'</div></div></button>'+
-        (past&&l.status==='planned'?'<div class="row" style="flex:none;flex-direction:column;gap:4px"><button class="btn sm" data-act="ls" data-st="done" data-id="'+l.id+'">Была</button><button class="btn sm ghost" data-act="ls" data-st="skipped" data-id="'+l.id+'">Пропуск</button></div>':'')+'</div>';
-    }).join('')+'</div>';
+    h+='<div class="card list">'+ls.map(function(l){return lessonRow(l,d,t,shown)}).join('')+'</div>';
   }
-  h+='<div class="row"><button class="btn" data-act="bulk">Вставить пары списком</button><button class="btn ghost" data-act="add-lesson">+ Одна пара</button></div></section>';
-  /* homework */
+  h+='<div class="row"><button class="btn" data-act="bulk">Вставить пары списком</button><button class="btn ghost" data-act="add-lesson">+ Одна пара</button><button class="btn ghost" data-act="add-window">+ Окно</button></div></section>';
+  var rg=restGrades(d,shown);
+  if(rg)h+='<section class="sec"><h3 class="cap">Оценки за этот день</h3>'+rg+'</section>';
   h+='<section class="sec"><div class="head"><h3 class="cap">Что задали на этот день</h3><button class="btn sm ghost" data-act="add-hw">+ Задание</button></div>';
   if(!hws.length&&!over.length)h+='<div class="card"><div class="empty">Заданий на этот день нет.</div></div>';
   else h+='<div class="card list">'+hws.sort(function(a,b){return a.done-b.done}).map(function(x){return hwRow(x,false)}).join('')+'</div>';
@@ -442,7 +496,7 @@ function vHw(){
 function vHours(){
   var tot=0,pairs=0;
   state.subjects.forEach(function(s){var st=stats(s);tot+=st.left;pairs+=st.pairs});
-  var h='<div class="top"><div><h1 class="title">Часы</h1><p class="sub">1 пара = '+H_PAIR+' часа</p></div><button class="btn" data-act="add-subj">+ Предмет</button></div>';
+  var h='<div class="top"><div><h1 class="title">Часы</h1><p class="sub">1 пара = '+H_PAIR+' часа</p></div><div class="row"><button class="btn ghost" data-act="add-subjs">Списком</button><button class="btn" data-act="add-subj">+ Предмет</button></div></div>';
   h+=banner();
   h+='<div class="card pad"><div class="stats"><div><div class="big">'+tot+'</div><div class="small muted">часов осталось</div></div><div><div class="big">'+pairs+'</div><div class="small muted">'+plural(pairs,['пара','пары','пар'])+' до конца</div></div></div></div>';
   if(!state.subjects.length)h+='<div class="card"><div class="empty">Добавь предметы и общее число часов по ним.</div></div>';
@@ -542,6 +596,7 @@ function render(){
   var m={day:vDay,hw:vHw,hours:vHours,grades:vGrades,focus:vFocus};
   $('#view').innerHTML='<div style="display:flex;flex-direction:column;gap:18px">'+m[ui.tab]()+'</div>';
   renderNav();
+  var vf=document.getElementById('ver');if(!vf){vf=document.createElement('p');vf.id='ver';vf.className='small muted';vf.style.cssText='text-align:center;margin:18px 0 0';$('#view').after(vf)}vf.textContent='Версия 7 · 19.10.2026';
 }
 var toastT=0;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2200)}
@@ -579,20 +634,34 @@ function editSubj(id){
     s?'Удалить предмет с парами, заданиями и оценками':null,
     s?function(){state.subjects=state.subjects.filter(function(x){return x.id!==s.id});['lessons','template','hw','grades','focus'].forEach(function(k){state[k]=state[k].filter(function(x){return x.sid!==s.id})});save();render()}:null);
 }
+function numOpts(sel,blank){var h=blank?'<option value="">—</option>':'';for(var i=1;i<=8;i++)h+='<option value="'+i+'"'+(+sel===i?' selected':'')+'>'+i+'</option>';return h}
 function editLesson(id,presetDate){
   if(!id&&needSubj())return;
   var l=id?state.lessons.find(function(x){return x.id===id}):null,d=l?l.date:(presetDate||ui.date);
   openSheet(l?'Пара':'Новая пара',
     '<label class="f">Предмет<select class="in" name="sid" id="f-sid">'+subjOpts(l?l.sid:null)+'</select></label>'+
-    '<div class="two"><label class="f">Дата<input class="in" type="date" name="date" id="f-date" value="'+d+'"></label><label class="f">Начало<input class="in" type="time" name="start" id="f-start" value="'+(l?l.start:'')+'"></label></div>'+
-    '<div class="two"><label class="f">Аудитория<input class="in" name="room" id="f-room" value="'+esc(l?l.room:'')+'"></label><label class="f">Тип<select class="in" name="kind" id="f-kind">'+kindOpts(l?l.kind:'')+'</select></label></div>'+
+    '<div class="two"><label class="f">Дата<input class="in" type="date" name="date" id="f-date" value="'+d+'"></label><label class="f">Какая по счёту пара<select class="in" name="num" id="f-num">'+numOpts(l?l.num:'',true)+'</select></label></div>'+
+    '<div class="two"><label class="f">Время начала<input class="in" type="time" name="start" id="f-start" value="'+(l?l.start:'')+'"></label><label class="f">Аудитория<input class="in" name="room" id="f-room" value="'+esc(l?l.room:'')+'"></label></div>'+
+    '<label class="f">Тип<select class="in" name="kind" id="f-kind">'+kindOpts(l?l.kind:'')+'</select></label>'+
     (l?'<div class="f" style="gap:8px"><span>Статус</span><div class="pick">'+[['planned','Впереди'],['done','Была'],['skipped','Пропуск']].map(function(o){return '<label><input type="radio" name="status" value="'+o[0]+'"'+(l.status===o[0]?' checked':'')+'><span style="font-size:14px">'+o[1]+'</span></label>'}).join('')+'</div></div>':''),
     function(fd){
-      var o=l||{id:uid(),status:'planned'};o.sid=val(fd,'sid');o.date=val(fd,'date')||d;o.start=val(fd,'start');o.room=val(fd,'room');o.kind=val(fd,'kind');
+      var o=l||{id:uid(),status:'planned'};o.sid=val(fd,'sid');o.date=val(fd,'date')||d;o.start=val(fd,'start');o.room=val(fd,'room');o.kind=val(fd,'kind');o.num=val(fd,'num')?+val(fd,'num'):'';
       if(l&&val(fd,'status'))o.status=val(fd,'status');
       if(!l)state.lessons.push(o);if(o.date!==ui.date&&!l)ui.date=o.date;save();render();
     },
     l?'Удалить пару':null,l?function(){state.lessons=state.lessons.filter(function(x){return x.id!==l.id});save();render()}:null);
+}
+function windowSheet(id){
+  var l=id?state.lessons.find(function(x){return x.id===id}):null,d=l?l.date:ui.date;
+  openSheet(l?'Окно':'Новое окно',
+    '<label class="f">Какая по счёту пара свободна<select class="in" name="num" id="f-num">'+numOpts(l?l.num:1,false)+'</select></label>'+
+    '<div class="two"><label class="f">Дата<input class="in" type="date" name="date" id="f-date" value="'+d+'"></label><label class="f">Время (по желанию)<input class="in" type="time" name="start" id="f-start" value="'+(l?l.start:'')+'"></label></div>'+
+    '<p class="hint">Окно показывается в расписании и в часы по предметам не входит.</p>',
+    function(fd){
+      var o=l||{id:uid(),sid:'',kind:'Окно',status:'planned',room:''};o.num=+val(fd,'num')||1;o.date=val(fd,'date')||d;o.start=val(fd,'start');
+      if(!l){state.lessons.push(o);ui.date=o.date}save();render();
+    },
+    l?'Удалить окно':null,l?function(){state.lessons=state.lessons.filter(function(x){return x.id!==l.id});save();render()}:null);
 }
 function matchSubject(name){
   var n=name.toLowerCase().replace(/ё/g,'е');
@@ -603,32 +672,54 @@ function matchSubject(name){
 }
 function parseLine(line){
   var s=line.replace(/^\s*(\d+[.)]|[-–—•*])\s+/,'').trim();if(!s)return null;
-  var toks=s.split(/[\s,;]+/).filter(Boolean),o={start:'',room:'',kind:''},name=[];
+  var num='',nm=s.match(/(\d{1,2})\s*[-–]?\s*(?:я|й|ая)?\s*пар[аыу]?(?![а-яё])/i);
+  if(nm){num=+nm[1];s=(s.slice(0,nm.index)+' '+s.slice(nm.index+nm[0].length)).trim()}
+  var toks=s.split(/[\s,;]+/).filter(Boolean),o={start:'',room:'',kind:'',num:num,win:false},name=[];
   for(var i=0;i<toks.length;i++){
     var t=toks[i],lt=t.toLowerCase().replace(/\.$/,'');
     var tm=t.match(/^(\d{1,2})[:.](\d{2})$/);
     if(tm&&+tm[1]<24&&+tm[2]<60){o.start=pad(+tm[1])+':'+tm[2];continue}
-    if(/^(лекция|лек)$/.test(lt)){o.kind='Лекция';continue}
-    if(/^(практика|прак|пр)$/.test(lt)){o.kind='Практика';continue}
-    if(/^(лаб|лабораторная|лабка)$/.test(lt)){o.kind='Лаб';continue}
-    if(/^семинар$/.test(lt)){o.kind='Семинар';continue}
+    if(/^окн[оа]$/.test(lt)){o.win=true;continue}
+    if(/^(лекция|лекции|лек)$/.test(lt)){o.kind='Лекция';continue}
+    if(/^(практика|практическая|практ|прак|пр)$/.test(lt)){o.kind='Практика';continue}
+    if(/^(лаб|лабораторная|лабка)$/.test(lt)){o.kind='Лабораторная';continue}
+    if(/^(зачет|зачёт|зач)$/.test(lt)){o.kind='Зачёт';continue}
     if(/^(ауд|аудитория|каб|кабинет|к)$/.test(lt)&&toks[i+1]){o.room=toks[++i];continue}
     if(/^\d{2,4}[а-яa-z]?$/i.test(t)&&name.length){o.room=t;continue}
     if(/^[-–—]$/.test(t))continue;
     name.push(t);
   }
-  o.name=name.join(' ');return o.name?o:null;
+  o.name=name.join(' ');
+  if(o.win)return o;
+  return o.name?o:null;
 }
 function bulkSheet(){
   var d=ui.date;
   openSheet('Пары на '+fmtShort(d),
-    '<label class="f">Вставь список, по паре на строку<textarea class="in" name="txt" id="f-txt" placeholder="09:00 Матанализ лекция 312&#10;10:45 Программирование лаб ауд. 205&#10;12:40 Английский 118"></textarea></label>'+
-    '<p class="hint">В строке понимаю время, предмет, тип (лекция, практика, лаб, семинар) и аудиторию. Незнакомый предмет создам сам.</p>',
+    '<label class="f">Вставь список, по паре на строку<textarea class="in" name="txt" id="f-txt" style="min-height:150px" placeholder="1 пара окно&#10;2 пара Физика лекция 312&#10;3 пара 12:40 Английский практика 118&#10;4 пара Программирование лабораторная 205"></textarea></label>'+
+    '<p class="hint">В строке понимаю номер пары («2 пара»), время, предмет, тип (лекция, практика, лабораторная, зачёт) и аудиторию. Слово «окно» создаёт окно. Незнакомый предмет добавлю сам, часы по нему впишешь потом.</p>',
     function(fd){
       var rows=val(fd,'txt').split('\n').map(parseLine).filter(Boolean);
       if(!rows.length){toast('Не нашёл ни одной пары');return false}
-      rows.forEach(function(r){var s=matchSubject(r.name);state.lessons.push({id:uid(),sid:s.id,date:d,start:r.start,room:r.room,kind:r.kind,status:'planned'})});
-      state.demo=state.demo;save();render();toast('Добавлено пар: '+rows.length);
+      rows.forEach(function(r){
+        if(r.win){state.lessons.push({id:uid(),sid:'',date:d,start:r.start,room:'',kind:'Окно',num:r.num||'',status:'planned'});return}
+        var s=matchSubject(r.name);state.lessons.push({id:uid(),sid:s.id,date:d,start:r.start,room:r.room,kind:r.kind,num:r.num||'',status:'planned'});
+      });
+      save();render();toast('Добавлено строк: '+rows.length);
+    });
+}
+function subjBulkSheet(){
+  openSheet('Добавить предметы',
+    '<label class="f">Названия, по одному на строку<textarea class="in" name="txt" id="f-txt" style="min-height:150px" placeholder="Математический анализ&#10;Физика&#10;История"></textarea></label>'+
+    '<p class="hint">Часы по каждому предмету впишешь потом: нажми на предмет в списке.</p>',
+    function(fd){
+      var names=val(fd,'txt').split(/[\n;]+/).map(function(x){return x.trim()}).filter(Boolean),n=0;
+      names.forEach(function(nm){
+        if(state.subjects.some(function(s){return s.name.toLowerCase()===nm.toLowerCase()}))return;
+        state.subjects.push({id:uid(),name:nm,teacher:'',total:0,before:0,color:COLORS[state.subjects.length%COLORS.length]});n++;
+      });
+      if(!n){toast('Новых предметов нет');return false}
+      save();render();toast('Добавлено предметов: '+n);
     });
 }
 function hwSheet(id){
@@ -649,14 +740,14 @@ function hwSheet(id){
     },
     h?'Удалить задание':null,h?function(){state.hw=state.hw.filter(function(x){return x.id!==h.id});save();render()}:null);
 }
-function gradeSheet(id,sid){
+function gradeSheet(id,sid,date){
   if(!id&&needSubj())return;
   var g=id?state.grades.find(function(x){return x.id===id}):null;
   openSheet(g?'Оценка':'Новая оценка',
     '<label class="f">Предмет<select class="in" name="sid" id="f-sid">'+subjOpts(g?g.sid:sid)+'</select></label>'+
     '<div class="f" style="gap:8px"><span>Оценка</span><div class="pick">'+[5,4,3,2].map(function(v){return '<label><input type="radio" name="val" value="'+v+'"'+((g?g.val:5)===v?' checked':'')+'><span>'+v+'</span></label>'}).join('')+'</div></div>'+
     '<label class="f">Вес<select class="in" name="w" id="f-w">'+[[1,'Обычная ×1'],[2,'Контрольная ×2'],[3,'Экзамен ×3']].map(function(o){return '<option value="'+o[0]+'"'+((g?g.w:1)===o[0]?' selected':'')+'>'+o[1]+'</option>'}).join('')+'</select></label>'+
-    '<div class="two"><label class="f">Дата<input class="in" type="date" name="date" id="f-date" value="'+(g?g.date:today())+'"></label><label class="f">Заметка<input class="in" name="note" id="f-note" value="'+esc(g?g.note:'')+'"></label></div>',
+    '<div class="two"><label class="f">Дата<input class="in" type="date" name="date" id="f-date" value="'+(g?g.date:(date||(ui.tab==='day'&&ui.date<=today()?ui.date:today())))+'"></label><label class="f">Заметка<input class="in" name="note" id="f-note" value="'+esc(g?g.note:'')+'"></label></div>',
     function(fd){
       var o=g||{id:uid()};o.sid=val(fd,'sid');o.val=+val(fd,'val')||5;o.w=+val(fd,'w')||1;o.date=val(fd,'date')||today();o.note=val(fd,'note');
       if(!g)state.grades.push(o);save();render();
@@ -698,6 +789,11 @@ document.addEventListener('click',function(e){
     case 'week':ui.date=addDays(ui.date,+el.dataset.n);render();break;
     case 'bulk':bulkSheet();break;
     case 'add-lesson':editLesson();break;
+    case 'add-window':windowSheet();break;
+    case 'edit-window':windowSheet(id);break;
+    case 'mode':ui.mode=el.dataset.v;render();break;
+    case 'goto':ui.date=el.dataset.d;ui.mode='day';render();window.scrollTo(0,0);break;
+    case 'add-subjs':subjBulkSheet();break;
     case 'edit-lesson':editLesson(id);break;
     case 'ls':
       var l=state.lessons.find(function(x){return x.id===id});if(l){l.status=el.dataset.st;save();render()}break;
@@ -714,7 +810,7 @@ document.addEventListener('click',function(e){
     case 'edit-subj':editSubj(id);break;
     case 'add-tpl':tplSheet();break;
     case 'edit-tpl':tplSheet(id);break;
-    case 'add-grade':gradeSheet(null,el.dataset.sid);break;
+    case 'add-grade':gradeSheet(null,el.dataset.sid,el.dataset.date);break;
     case 'edit-grade':gradeSheet(id);break;
     case 'tgt':state.settings.target=Math.min(5,Math.max(3,Math.round((state.settings.target+ +el.dataset.n)*100)/100));save();render();break;
     case 'fdur':if(!fx.running){fx.dur=+el.dataset.m;fx.left=fx.dur*60000;render()}break;
@@ -727,6 +823,7 @@ document.addEventListener('change',function(e){if(e.target.id==='fsid'){fx.sid=e
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#sheet').hidden)closeSheet()});
 document.addEventListener('visibilitychange',function(){if(!document.hidden&&fx.running)fxTick()});
 
+if(justSeeded){justSeeded=false;save()}
 render();
 initCloud();
 })();
