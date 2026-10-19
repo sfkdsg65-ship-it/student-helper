@@ -1,0 +1,11 @@
+{
+  "name": "Помощник по учёбе",
+  "short_name": "Учёба",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F1F4EF",
+  "theme_color": "#0F5B4A",
+  "lang": "ru",
+  "icons": [{"src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}
