@@ -283,7 +283,11 @@ var LS='study-helper-v1';
 function localLoad(){try{var r=localStorage.getItem(LS);if(r)return norm(JSON.parse(r))}catch(e){}return null}
 function localSave(){try{localStorage.setItem(LS,JSON.stringify(state))}catch(e){}}
 var state=norm(localLoad()||empty());
-var ui={tab:'day',mode:'day',date:addDays(today(),1),hwTab:'open',sheetDel:null};
+var ui={tab:'day',mode:'day',date:addDays(today(),1),hwTab:'open',sheetDel:null,gm:today().slice(0,7)};
+var MN=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+function monthShift(m,n){var y=+m.slice(0,4),k=+m.slice(5,7)-1+n;y+=Math.floor(k/12);k=((k%12)+12)%12;return y+'-'+pad(k+1)}
+function monthName(m){return MN[+m.slice(5,7)-1]+' '+m.slice(0,4)}
+function roundGrade(a){return Math.floor(a+0.5)}
 try{var tb=localStorage.getItem('study-helper-tab');if(tb&&/^(day|hw|hours|grades|focus)$/.test(tb))ui.tab=tb}catch(e){}
 
 /* ---------- cloud sync (db) ---------- */
@@ -535,19 +539,22 @@ function spark(gs){
   return '<svg viewBox="0 0 '+w+' '+hh+'" width="100%" role="img" aria-label="Динамика среднего балла" style="display:block">'+grid+'<path d="'+area+'" fill="var(--accent)" fill-opacity=".12" stroke="none"/><path d="'+path+'" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="'+x(pts.length-1).toFixed(1)+'" cy="'+y(last).toFixed(1)+'" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/></svg>';
 }
 function vGrades(){
-  var all=agg(state.grades),T=state.settings.target;
+  var M=ui.gm,GS=M==='all'?state.grades:state.grades.filter(function(g){return g.date.slice(0,7)===M});
+  var all=agg(GS),T=state.settings.target,whole=agg(state.grades);
+  var mhas={};state.grades.forEach(function(g){mhas[g.date.slice(0,7)]=1});
   var h='<div class="top"><div><h1 class="title">Оценки</h1><p class="sub">Средний балл с учётом веса</p></div><button class="btn" data-act="add-grade">+ Оценка</button></div>';
   h+=banner();
-  var cnt={5:0,4:0,3:0,2:0},mx=1;state.grades.forEach(function(g){if(cnt[g.val]!=null)cnt[g.val]++});for(var k in cnt)mx=Math.max(mx,cnt[k]);
-  h+='<div class="card pad" style="display:flex;flex-direction:column;gap:16px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="cap">Общий средний</div><div class="avg" style="color:'+(all.avg==null?'var(--muted)':'var(--'+(avgCls(all.avg)||'fg')+')')+'">'+(all.avg==null?'—':fmt(all.avg))+'</div><div class="small muted" style="margin-top:6px">'+all.n+' '+plural(all.n,['оценка','оценки','оценок'])+'</div></div>'+
+  h+='<div class="card pad" style="display:flex;flex-direction:column;gap:12px"><div class="step" style="justify-content:space-between"><button data-act="gm" data-n="-1" aria-label="Предыдущий месяц"'+(M==='all'?' disabled style="opacity:.4"':'')+'>‹</button><b style="font-size:17px;text-align:center">'+(M==='all'?'За всё время':monthName(M))+'</b><button data-act="gm" data-n="1" aria-label="Следующий месяц"'+(M==='all'?' disabled style="opacity:.4"':'')+'>›</button></div><div class="row" style="justify-content:center"><button class="btn sm '+(M==='all'?'ghost':'')+'" data-act="gm-cur">Этот месяц</button><button class="btn sm '+(M==='all'?'':'ghost')+'" data-act="gm-all">Всё время</button></div></div>';
+  var cnt={5:0,4:0,3:0,2:0},mx=1;GS.forEach(function(g){if(cnt[g.val]!=null)cnt[g.val]++});for(var k in cnt)mx=Math.max(mx,cnt[k]);
+  h+='<div class="card pad" style="display:flex;flex-direction:column;gap:16px"><div class="row" style="justify-content:space-between;align-items:flex-end"><div><div class="cap">'+(M==='all'?'Общий средний':'Итог за месяц')+'</div><div class="avg" style="color:'+(all.avg==null?'var(--muted)':'var(--'+(avgCls(all.avg)||'fg')+')')+'">'+(all.avg==null?'—':fmt(all.avg))+'</div><div class="small muted" style="margin-top:6px">'+all.n+' '+plural(all.n,['оценка','оценки','оценок'])+(M!=='all'&&all.n?' · итог «'+roundGrade(all.avg)+'»':'')+(M!=='all'&&whole.n?' · за всё время '+fmt(whole.avg):'')+'</div></div>'+
     '<div><div class="cap" style="text-align:right;margin-bottom:6px">Цель</div><div class="step"><button data-act="tgt" data-n="-0.25" aria-label="Цель меньше">−</button><b class="num" style="min-width:42px;text-align:center;font-size:18px">'+fmt(T)+'</b><button data-act="tgt" data-n="0.25" aria-label="Цель больше">+</button></div></div></div>'+
     (all.n?'<div class="small" style="font-weight:600">'+need(all,T)+'</div>':'')+
     (all.n?'<div class="dist">'+[5,4,3,2].map(function(v){return '<div><b>'+cnt[v]+'</b><i style="height:'+Math.max(3,cnt[v]/mx*60)+'px;opacity:'+(v>=4?1:.55)+'"></i><span>«'+v+'»</span></div>'}).join('')+'</div>':'')+
-    spark(state.grades)+'</div>';
+    spark(GS)+(M!=='all'&&!all.n?'<div class="small muted">В этом месяце оценок нет.'+(Object.keys(mhas).length?' Листай стрелками.':'')+'</div>':'')+'</div>';
   if(!state.subjects.length)h+='<div class="card"><div class="empty">Сначала добавь предметы во вкладке «Часы».</div></div>';
   h+=state.subjects.map(function(s){
-    var gs=state.grades.filter(function(g){return g.sid===s.id}).sort(function(a,b){return a.date.localeCompare(b.date)}),a=agg(gs);
-    return '<div class="card pad"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="name grow">'+subDot(s.id)+esc(s.name)+'</div><span class="pill '+(a.avg==null?'':'tag '+avgCls(a.avg))+'" style="flex:none">'+(a.avg==null?'—':fmt(a.avg))+'</span></div>'+
+    var gs=GS.filter(function(g){return g.sid===s.id}).sort(function(a,b){return a.date.localeCompare(b.date)}),a=agg(gs);
+    return '<div class="card pad"><div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div class="name grow">'+subDot(s.id)+esc(s.name)+'</div><span class="pill '+(a.avg==null?'':'tag '+avgCls(a.avg))+'" style="flex:none">'+(a.avg==null?'—':fmt(a.avg)+(M!=='all'?' → '+roundGrade(a.avg):''))+'</span></div>'+
       '<div class="gchips">'+gs.map(function(g){return '<button class="gchip g'+g.val+'" data-act="edit-grade" data-id="'+g.id+'" aria-label="Оценка '+g.val+', изменить">'+g.val+(g.w>1?'<sup>×'+g.w+'</sup>':'')+'</button>'}).join('')+'<button class="gchip" data-act="add-grade" data-sid="'+s.id+'" aria-label="Добавить оценку">+</button></div>'+
       (a.n?'<p class="small muted" style="margin-top:10px">'+need(a,T)+'</p>':'')+'</div>';
   }).join('');
@@ -596,7 +603,7 @@ function render(){
   var m={day:vDay,hw:vHw,hours:vHours,grades:vGrades,focus:vFocus};
   $('#view').innerHTML='<div style="display:flex;flex-direction:column;gap:18px">'+m[ui.tab]()+'</div>';
   renderNav();
-  var vf=document.getElementById('ver');if(!vf){vf=document.createElement('p');vf.id='ver';vf.className='small muted';vf.style.cssText='text-align:center;margin:18px 0 0';$('#view').after(vf)}vf.textContent='Версия 7 · 19.10.2026';
+  var vf=document.getElementById('ver');if(!vf){vf=document.createElement('p');vf.id='ver';vf.className='small muted';vf.style.cssText='text-align:center;margin:18px 0 0';$('#view').after(vf)}vf.textContent='Версия 8 · 20.10.2026';
 }
 var toastT=0;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2200)}
@@ -812,6 +819,9 @@ document.addEventListener('click',function(e){
     case 'edit-tpl':tplSheet(id);break;
     case 'add-grade':gradeSheet(null,el.dataset.sid,el.dataset.date);break;
     case 'edit-grade':gradeSheet(id);break;
+    case 'gm':ui.gm=monthShift(ui.gm,+el.dataset.n);render();break;
+    case 'gm-cur':ui.gm=today().slice(0,7);render();break;
+    case 'gm-all':ui.gm='all';render();break;
     case 'tgt':state.settings.target=Math.min(5,Math.max(3,Math.round((state.settings.target+ +el.dataset.n)*100)/100));save();render();break;
     case 'fdur':if(!fx.running){fx.dur=+el.dataset.m;fx.left=fx.dur*60000;render()}break;
     case 'fstart':fxStart();break;
