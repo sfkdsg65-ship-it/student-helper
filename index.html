@@ -345,6 +345,7 @@ function stats(s){
   var t=today(),done=0,planned=0,skipped=0;
   state.lessons.forEach(function(l){
     if(l.sid!==s.id||l.kind==='Зачёт')return;
+    if(s.upto&&l.date<=s.upto)return;
     if(l.status==='skipped')skipped++;
     var held=l.status==='done'||l.date<t||(l.date===t&&l.status==='skipped');
     if(held)done++;else planned++;
@@ -603,7 +604,7 @@ function render(){
   var m={day:vDay,hw:vHw,hours:vHours,grades:vGrades,focus:vFocus};
   $('#view').innerHTML='<div style="display:flex;flex-direction:column;gap:18px">'+m[ui.tab]()+'</div>';
   renderNav();
-  var vf=document.getElementById('ver');if(!vf){vf=document.createElement('p');vf.id='ver';vf.className='small muted';vf.style.cssText='text-align:center;margin:18px 0 0';$('#view').after(vf)}vf.textContent='Версия 8 · 20.10.2026';
+  var vf=document.getElementById('ver');if(!vf){vf=document.createElement('p');vf.id='ver';vf.className='small muted';vf.style.cssText='text-align:center;margin:18px 0 0';$('#view').after(vf)}vf.textContent='Версия 9 · 21.10.2026';
 }
 var toastT=0;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2200)}
@@ -631,11 +632,12 @@ function editSubj(id){
     '<label class="f">Название<input class="in" name="name" id="f-name" required value="'+esc(s?s.name:'')+'" placeholder="Например, Физика"></label>'+
     '<div class="two"><label class="f">Всего часов<input class="in" name="total" id="f-total" type="number" inputmode="numeric" min="0" value="'+(s?s.total:'')+'" placeholder="72"></label>'+
     '<label class="f">Уже прошло, ч<input class="in" name="before" id="f-before" type="number" inputmode="numeric" min="0" value="'+(s?s.before:'')+'" placeholder="0"></label></div>'+
-    '<p class="hint">«Уже прошло» — часы до того, как ты начал вести учёт здесь. Дальше считаю сам: каждая пара в расписании это '+H_PAIR+' ч.</p>'+
+    '<label class="f">Это число на дату<input class="in" name="upto" id="f-upto" type="date" value="'+((s&&s.upto)||today())+'"></label>'+
+    '<p class="hint">«Уже прошло» — сколько часов было к этой дате. Пары в расписании до этой даты (включая её) я не добавляю, считаю только более поздние: каждая пара это '+H_PAIR+' ч.</p>'+
     '<div class="pick">'+COLORS.map(function(c){return '<label><input type="radio" name="color" value="'+c+'"'+(c===cur?' checked':'')+'><span class="sw" style="background:'+c+'"></span></label>'}).join('')+'</div>',
     function(fd){
       var n=val(fd,'name');if(!n){toast('Введи название');return false}
-      var o=s||{id:uid()};o.name=n;o.total=Math.max(0,+val(fd,'total')||0);o.before=Math.max(0,+val(fd,'before')||0);o.color=val(fd,'color')||cur;o.teacher=o.teacher||'';
+      var o=s||{id:uid()};o.name=n;o.total=Math.max(0,+val(fd,'total')||0);o.before=Math.max(0,+val(fd,'before')||0);o.upto=val(fd,'upto')||today();o.color=val(fd,'color')||cur;o.teacher=o.teacher||'';
       if(!s)state.subjects.push(o);save();render();
     },
     s?'Удалить предмет с парами, заданиями и оценками':null,
